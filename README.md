@@ -1,2 +1,2 @@
 # songster
-Model built in SIGAIDA group to generate song lyrics.
+Model built in a SIGAIDA group to generate song lyrics.
