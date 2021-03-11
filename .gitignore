@@ -1,3 +1,11 @@
+# Custom gitignore rules
+data/*
+
+#
+# The below template is taken from a github gitifnore template:
+# https://github.com/github/gitignore/blob/master/Python.gitignore
+#
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
