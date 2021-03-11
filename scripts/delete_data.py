@@ -1,5 +1,5 @@
 """
-    Script to delete all downloaded directory
+    Script to delete all downloaded data
 """
 
 
