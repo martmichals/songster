@@ -1,5 +1,6 @@
 # Custom gitignore rules
 data/*
+scripts/secrets.json
 
 #
 # The below template is taken from a github gitifnore template:
