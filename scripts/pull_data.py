@@ -6,6 +6,7 @@ from pathlib import Path
 
 # Constants
 DATA_DIR = Path('../data/')
+SECRETS = Path('./secrets.json')
 
 with open('secrets.json') as f:
     secret_file = json.load(f)
@@ -126,6 +127,10 @@ def main(args):
     # TODO : Make sure that the genre/artist passed is valid
 
     # TODO : Launch download of data
+
+    with open(SECRETS) as secrets_f:
+        secrets = json.load(secrets_f)
+        print('Key: {}\n'.format(secrets['keys']['genius']))
 
     print('*****Passed Arguments*****\nGenre: {}\nArtist: {}'.format(args.genre, args.artist))
     print('This is the data directory: {}'.format(DATA_DIR))
