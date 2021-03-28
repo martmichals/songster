@@ -9,9 +9,6 @@ import os
 DATA_DIR = Path('../data/')
 SECRETS = Path('./secrets.json')
 
-# with open(SECRETS) as secrets_f:
-#     secrets = json.load(secrets_f)
-
 """
     This script downloads song data corresponding to the passed parameters
 
@@ -27,7 +24,6 @@ def download_genre(genius, genre, song_count_limit):
     Args:
         genre (str): genre to pull song data for
         song_count_limit (int): limits # of songs being pulled
-
     """
 
     page = 1
@@ -60,7 +56,6 @@ def download_artist(genius, artist, song_count_limit):
     genius_artist = genius.search_artist(artist, max_songs=1, include_features=True)
     page = 1
     all_lyrics = {}
-    temp = 0
 
     while len(all_lyrics) < song_count_limit and page:
         request = genius.artist_songs(genius_artist.id,
@@ -69,8 +64,6 @@ def download_artist(genius, artist, song_count_limit):
                                       page=page)
 
         for song in request['songs']:
-            print(temp)
-            temp += 1
             title = song['title']
             try:
                 lyrics = genius.search_song(title, genius_artist.name).lyrics
@@ -94,7 +87,7 @@ def clean_lyrics(lyrics):
     Args:
         lyrics (str): lyrics to be cleaned
     Returns:
-        (str): clean lyrics
+        (str): cleaned up lyrics
     """
     lyrics = lyrics.replace("\n", " ").replace("\r", " ")
 
@@ -108,7 +101,6 @@ def clean_lyrics(lyrics):
 
         lyrics_index += 1
 
-    # return lyrics
     # removes all non-unicode characters
     return ''.join([i if ord(i) < 128 else ' ' for i in lyrics])
 
@@ -126,7 +118,6 @@ def write_dict_to_file(artist_name, lyric_dict):
     for name in artist_name.split(" "):
         formatted_artist_name += name + "_"
 
-    print(len(lyric_dict))
     file_name = formatted_artist_name + "lyrics.txt"
     file_path = str(Path().resolve().parent) + "/data/"
 
@@ -134,18 +125,15 @@ def write_dict_to_file(artist_name, lyric_dict):
         os.makedirs(file_path)
 
     data = str(lyric_dict)
-    file_writer = open(file_path + file_name, 'wt')
+    file_writer = open(file_path + file_name, 'w+', encoding="utf-8", errors="ignore")
     file_writer.write(data)
 
 
 def main(args):
     """Validates the arguments passed, launches data download
-
     Args:
         args (object): command line arguments passed to the script
     """
-
-    # TODO : Make sure that the genre/artist passed is valid
 
     with open(SECRETS) as secrets_f:
         secrets = json.load(secrets_f)
