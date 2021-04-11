@@ -1,5 +1,5 @@
 import random
-
+import nltk
 
 class TransitionMatrix:
 
@@ -35,9 +35,7 @@ class TransitionMatrix:
             #     if rand_val <= total:
             #         return word
         else:
-            rand_index = random.randrange(0, 1)
-            rand_key = random.choice(list(self.SparseMatrix.keys()))
-            return rand_key.split(",")[rand_index]
+            return None
 
 
     def get_matrix(self):

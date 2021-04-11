@@ -1,8 +1,3 @@
-"""
-    Command-line script that trains a given model type, and then generates
-    text once the model is trained
-"""
-
 import ast
 import re
 import random
@@ -27,9 +22,14 @@ class TextGenerator:
                     continue
                 all_lyrics += lyric + " "
 
-        all_lyrics = self.remove_stop_words(all_lyrics)
+        # all_lyrics = self.tag_words(all_lyrics)
         self.transition_matrix = self.create_transition_matrix(all_lyrics)
         self.song_length = song_length
+
+    # def tag_words(self, se):
+    #     for sentence in lyrics.split("."):
+    #         text = nltk.word_tokenized(sentence)
+    #     return lyrics
 
     def preprocess_sentence(self, sentence):
         sentence = sentence.lower()
@@ -37,16 +37,6 @@ class TextGenerator:
         sentence = re.sub('([.,!?])', r' \1 ', sentence)
         sentence = re.sub('\s{2,}', ' ', sentence)
         return sentence
-
-    def remove_stop_words(self, lyrics):
-        lyrics = lyrics.replace(" a ", " ")
-        lyrics = lyrics.replace(" an ", " ")
-        lyrics = lyrics.replace(" the ", " ")
-        lyrics = lyrics.replace(" to ", " ")
-        lyrics = lyrics.replace(" for ", " ")
-        lyrics = lyrics.replace("?", " ")
-
-        return lyrics
 
     def create_transition_matrix(self, lyrics):
         matrix = TransitionMatrix()
@@ -69,12 +59,21 @@ class TextGenerator:
 
         for i in range(self.song_length):
             new_word = self.transition_matrix.next_word(word1, word2)
-            story = story + " " + new_word
-            word1 = word2
-            word2 = new_word
+            if new_word is None:
+                rand_key = random.choice(list(matrix.keys())).split(",")
+                word1 = rand_key[0]
+                word2 = rand_key[1]
+                temp = self.transition_matrix.next_word(word1, word2)
+                story = story + " " + temp
+                word1 = word2
+                word2 = temp
+            else:
+                story = story + " " + new_word
+                word1 = word2
+                word2 = new_word
 
         return story
 
 
-temp = TextGenerator("../data/Taylor_Swift_lyrics.txt")
+temp = TextGenerator("../data/Kanye_West_lyrics.txt")
 print(temp.generate_text())
