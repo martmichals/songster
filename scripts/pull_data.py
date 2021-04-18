@@ -65,17 +65,14 @@ def download_artist(genius, artist, song_count_limit):
 
         for song in request['songs']:
             title = song['title']
-            try:
+            if len(all_lyrics) < song_count_limit:
                 lyrics = genius.search_song(title, genius_artist.name).lyrics
-                try:
-                    all_lyrics[title] = clean_lyrics(lyrics)
-                except IndexError:
-                    continue
-            except AttributeError:
-                continue
+                all_lyrics[title] = clean_lyrics(lyrics)
+            else:
+                break
 
         page = request['next_page']
-
+    
     write_dict_to_file(genius_artist.name, all_lyrics)
 
     return genius_artist.name, all_lyrics
@@ -138,11 +135,9 @@ def main(args):
     with open(SECRETS) as secrets_f:
         secrets = json.load(secrets_f)
         genius = lyricsgenius.Genius(secrets['keys']['genius'])
-        print('Key: {}\n'.format(secrets['keys']['genius']))
 
     print('*****Passed Arguments*****\nGenre: {}\nArtist: '
           '{}\nLimit: {}'.format(args.genre, args.artist, args.limit))
-    print('This is the data directory: {}'.format(DATA_DIR))
 
     song_count_limit = args.limit
 
