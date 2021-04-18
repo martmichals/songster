@@ -96,7 +96,7 @@ def clean_lyrics(lyrics):
     # Strip leading, trailing whitespace, add newline to the end of the string
     lyrics = 'START ' + lyrics.strip() + '\n'
 
-    # Replace all multiple and single newline sequences with end/start tags
+    # Replace all multiple and single newline sequences with start tags
     lyrics = re.sub(r'\n+', ' END\n', lyrics)
 
     # Add start tags
