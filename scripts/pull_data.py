@@ -4,6 +4,7 @@ import json
 import argparse
 from pathlib import Path
 import os
+import re
 
 # Constants
 DATA_DIR = Path('../data/')
@@ -86,20 +87,25 @@ def clean_lyrics(lyrics):
     Returns:
         (str): cleaned up lyrics
     """
-    lyrics = lyrics.replace("\n", " ").replace("\r", " ")
+    # Strip all unicode
+    lyrics = lyrics.encode('ascii', 'ignore').decode()
 
-    lyrics_index = 0
-    while lyrics_index < len(lyrics):
-        if lyrics[lyrics_index] == '[':
-            sub_index = lyrics_index
-            while lyrics[sub_index] != ']':
-                sub_index += 1
-            lyrics = lyrics[: lyrics_index] + lyrics[sub_index + 1:]
+    # Delete all bracketed sections
+    lyrics = re.sub(r'\[[^][]*\]', '', lyrics)
 
-        lyrics_index += 1
+    # Strip leading, trailing whitespace, add newline to the end of the string
+    lyrics = 'START ' + lyrics.strip() + '\n'
 
-    # removes all non-unicode characters
-    return ''.join([i if ord(i) < 128 else ' ' for i in lyrics])
+    # Replace all multiple and single newline sequences with end/start tags
+    lyrics = re.sub(r'\n+', ' END\n', lyrics)
+
+    # Add start tags
+    lyrics = re.sub(r'\n(?=.)', '\nSTART ', lyrics)
+
+    # Replaces newlines with spaces
+    lyrics = lyrics.replace('\n', ' ')
+
+    return lyrics
 
 
 def write_dict_to_file(artist_name, lyric_dict):
@@ -120,6 +126,9 @@ def write_dict_to_file(artist_name, lyric_dict):
 
     if not os.path.exists(file_path):
         os.makedirs(file_path)
+
+    # Strip unicode characters from keys
+    lyric_dict = {key.encode('ascii', 'ignore').decode(): lyric_dict[key] for key in lyric_dict}
 
     data = str(lyric_dict)
     file_writer = open(file_path + file_name, 'w+', encoding="utf-8", errors="ignore")
