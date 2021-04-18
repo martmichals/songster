@@ -4,6 +4,7 @@ import json
 import argparse
 from pathlib import Path
 import os
+import re
 
 # Constants
 DATA_DIR = Path('../data/')
@@ -65,17 +66,14 @@ def download_artist(genius, artist, song_count_limit):
 
         for song in request['songs']:
             title = song['title']
-            try:
+            if len(all_lyrics) < song_count_limit:
                 lyrics = genius.search_song(title, genius_artist.name).lyrics
-                try:
-                    all_lyrics[title] = clean_lyrics(lyrics)
-                except IndexError:
-                    continue
-            except AttributeError:
-                continue
+                all_lyrics[title] = clean_lyrics(lyrics)
+            else:
+                break
 
         page = request['next_page']
-
+    
     write_dict_to_file(genius_artist.name, all_lyrics)
 
     return genius_artist.name, all_lyrics
@@ -89,20 +87,28 @@ def clean_lyrics(lyrics):
     Returns:
         (str): cleaned up lyrics
     """
-    lyrics = lyrics.replace("\n", " ").replace("\r", " ")
+    # Strip all unicode
+    lyrics = lyrics.encode('ascii', 'ignore').decode()
 
-    lyrics_index = 0
-    while lyrics_index < len(lyrics):
-        if lyrics[lyrics_index] == '[':
-            sub_index = lyrics_index
-            while lyrics[sub_index] != ']':
-                sub_index += 1
-            lyrics = lyrics[: lyrics_index] + lyrics[sub_index + 1:]
+    # Delete all bracketed sections
+    lyrics = re.sub(r'\[[^][]*\]', '', lyrics)
 
-        lyrics_index += 1
+    # Strip leading, trailing whitespace, add newline to the end of the string
+    lyrics = 'START ' + lyrics.strip() + '\n'
 
-    # removes all non-unicode characters
-    return ''.join([i if ord(i) < 128 else ' ' for i in lyrics])
+    # Replace all multiple and single newline sequences with start tags
+    lyrics = re.sub(r'\n+', ' END\n', lyrics)
+
+    # Add start tags
+    lyrics = re.sub(r'\n(?=.)', '\nSTART ', lyrics)
+
+    # Delete all parentheses
+    lyrics = re.sub('[()]', '', lyrics)
+
+    # Replaces newlines with spaces
+    lyrics = lyrics.replace('\n', ' ')
+
+    return lyrics
 
 
 def write_dict_to_file(artist_name, lyric_dict):
@@ -124,6 +130,9 @@ def write_dict_to_file(artist_name, lyric_dict):
     if not os.path.exists(file_path):
         os.makedirs(file_path)
 
+    # Strip unicode characters from keys
+    lyric_dict = {key.encode('ascii', 'ignore').decode(): lyric_dict[key] for key in lyric_dict}
+
     data = str(lyric_dict)
     file_writer = open(file_path + file_name, 'w+', encoding="utf-8", errors="ignore")
     file_writer.write(data)
@@ -138,11 +147,9 @@ def main(args):
     with open(SECRETS) as secrets_f:
         secrets = json.load(secrets_f)
         genius = lyricsgenius.Genius(secrets['keys']['genius'])
-        print('Key: {}\n'.format(secrets['keys']['genius']))
 
     print('*****Passed Arguments*****\nGenre: {}\nArtist: '
           '{}\nLimit: {}'.format(args.genre, args.artist, args.limit))
-    print('This is the data directory: {}'.format(DATA_DIR))
 
     song_count_limit = args.limit
 
