@@ -1,1 +1,2 @@
 lyricsgenius~=3.0.0
+nltk~=3.6.1
