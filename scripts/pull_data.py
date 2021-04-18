@@ -102,6 +102,9 @@ def clean_lyrics(lyrics):
     # Add start tags
     lyrics = re.sub(r'\n(?=.)', '\nSTART ', lyrics)
 
+    # Delete all parentheses
+    lyrics = re.sub('[()]', '', lyrics)
+
     # Replaces newlines with spaces
     lyrics = lyrics.replace('\n', ' ')
 
