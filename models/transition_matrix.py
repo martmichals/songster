@@ -1,13 +1,19 @@
 import random
-import nltk
+import re
+
 
 class TransitionMatrix:
 
-    def __init__(self):
+    def __init__(self, lyrics):
         self.SparseMatrix = {}
+        self.create_transition_matrix(lyrics)
+
+    def create_transition_matrix(self, lyrics):
+        for i in range(2, len(lyrics)):
+            self.add_triple(lyrics[i - 2], lyrics[i - 1], lyrics[i])
 
     def add_triple(self, word1, word2, word3):
-        key = word1 + "," + word2
+        key = (word1, word2)
 
         if key in self.SparseMatrix:
             if word3 in self.SparseMatrix[key]:
@@ -18,7 +24,7 @@ class TransitionMatrix:
             self.SparseMatrix[key] = {word3: 1}
 
     def next_word(self, word1, word2):
-        key = word1 + "," + word2
+        key = (word1, word2)
         if key in self.SparseMatrix:
             poss_words = []
             # creates list of possible third words based on frequency
@@ -27,16 +33,8 @@ class TransitionMatrix:
                 poss_words.extend(temp)
 
             return random.choice(poss_words)
-            # count = sum(self.SparseMatrix[key].values())
-            # rand_val = count * random.random()
-            # total = 0
-            # for word, idx in self.SparseMatrix[key].items():
-            #     total += idx
-            #     if rand_val <= total:
-            #         return word
         else:
             return None
-
 
     def get_matrix(self):
         return self.SparseMatrix

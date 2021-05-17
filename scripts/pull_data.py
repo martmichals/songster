@@ -54,26 +54,17 @@ def download_artist(genius, artist, song_count_limit):
         (dict): dictionary containing song titles and lyrics
     """
 
-    genius_artist = genius.search_artist(artist, max_songs=1, include_features=True)
-    page = 1
+    genius_artist = genius.search_artist(artist, max_songs=song_count_limit, include_features=True)
     all_lyrics = {}
 
-    while len(all_lyrics) < song_count_limit and page:
-        request = genius.artist_songs(genius_artist.id,
-                                      sort='popularity',
-                                      per_page=10,
-                                      page=page)
+    for song in genius_artist.songs:
+        title = song.title
+        try:
+            lyrics = song.lyrics
+        except AttributeError:
+            continue
+        all_lyrics[title] = clean_lyrics(lyrics)
 
-        for song in request['songs']:
-            title = song['title']
-            if len(all_lyrics) < song_count_limit:
-                lyrics = genius.search_song(title, genius_artist.name).lyrics
-                all_lyrics[title] = clean_lyrics(lyrics)
-            else:
-                break
-
-        page = request['next_page']
-    
     write_dict_to_file(genius_artist.name, all_lyrics)
 
     return genius_artist.name, all_lyrics
@@ -88,7 +79,13 @@ def clean_lyrics(lyrics):
         (str): cleaned up lyrics
     """
     # Strip all unicode
-    lyrics = lyrics.encode('ascii', 'ignore').decode()
+    # lyrics = lyrics.encode('ascii', 'ignore').decode()
+    lyrics = ''.join([i if ord(i) < 128 else ' ' for i in lyrics])
+    lyrics = lyrics.replace(",", "")
+    lyrics = lyrics.replace("'", "")
+    lyrics = lyrics.replace(" . ", "")
+    lyrics = lyrics.replace(";", "")
+    lyrics = lyrics.replace("''", "")
 
     # Delete all bracketed sections
     lyrics = re.sub(r'\[[^][]*\]', '', lyrics)
@@ -120,18 +117,17 @@ def write_dict_to_file(artist_name, lyric_dict):
         lyric_dict (dict): dictionary with song name as keys and lyrics as value
     """
 
-    formatted_artist_name = ""
-    for name in artist_name.split(" "):
-        formatted_artist_name += name + "_"
+    # Strip unicode characters from keys
+    lyric_dict = {key.encode('ascii', 'ignore').decode(): lyric_dict[key] for key in lyric_dict}
 
-    file_name = formatted_artist_name + "lyrics.txt"
     file_path = str(Path().resolve().parent) + "/data/"
-
     if not os.path.exists(file_path):
         os.makedirs(file_path)
 
-    # Strip unicode characters from keys
-    lyric_dict = {key.encode('ascii', 'ignore').decode(): lyric_dict[key] for key in lyric_dict}
+    formatted_artist_name = ""
+    for name in artist_name.split(" "):
+        formatted_artist_name += name + "_"
+    file_name = formatted_artist_name + "lyrics.txt"
 
     data = str(lyric_dict)
     file_writer = open(file_path + file_name, 'w+', encoding="utf-8", errors="ignore")
@@ -160,7 +156,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Songster data ')
+    parser = argparse.ArgumentParser(description='Songster data')
 
     parser.add_argument('--genre', dest='genre', type=str, default=None,
                         help='download music from the passed genre')
